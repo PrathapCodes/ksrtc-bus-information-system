@@ -1,64 +1,79 @@
-# KSRTC Bus Information System
+# 🚌 KSRTC Bus Information System
 
-A full-stack web application developed to provide users with easy access to KSRTC bus routes, schedules, and transportation details. The system enables passengers to search for bus information while providing administrators with a secure dashboard to manage buses, places, and user queries.
+A full-stack MERN web application designed to provide users with easy access to KSRTC bus routes, schedules, and transportation information. The system enables passengers to search bus details while providing administrators with a secure dashboard to manage buses, places, and user queries.
 
-## Project Overview
+---
 
-The KSRTC Bus Information System is designed to digitize bus information management and improve accessibility for passengers. Users can search routes and view timetables without authentication, while administrators can securely manage system data through an admin panel. The application follows a three-tier architecture using MongoDB, Express.js, Node.js, and React. 
+## 📖 Project Overview
 
-## Features
+The KSRTC Bus Information System digitizes bus information management and improves accessibility for passengers. Users can search routes and view timetables without authentication, while administrators can securely manage system data through an admin panel.
 
-### User Features
+The application follows a three-tier architecture using:
+
+- React.js (Frontend)
+- Node.js & Express.js (Backend)
+- MongoDB & Mongoose (Database)
+
+---
+
+## ✨ Features
+
+### 👤 User Features
+
 - View bus routes and schedules
 - Search buses by source and destination
 - View timetable information
 - Submit queries through the Contact Us page
+- Easy-to-use responsive interface
 
-### Admin Features
+### 🔐 Admin Features
+
 - Secure admin login
-- Manage places (Add/Delete)
-- Manage bus details
+- Add and manage places
+- Add and manage bus details
 - View user queries
 - Perform CRUD operations on transportation data
 
-## Tech Stack
+---
 
-### Frontend
-- React.js
-- HTML5
-- CSS3
-- JavaScript
-- Vite
+## 🛠️ Tech Stack
 
-### Backend
-- Node.js
-- Express.js
+| Layer | Technology |
+|---------|------------|
+| Frontend | React.js, HTML5, CSS3, JavaScript, Vite |
+| Backend | Node.js, Express.js |
+| Database | MongoDB, Mongoose ODM |
+| Version Control | Git, GitHub |
 
-### Database
-- MongoDB
-- Mongoose ODM
+---
 
-## System Architecture
+## 🏗️ System Architecture
 
 The application follows a Three-Tier Architecture:
 
-1. Presentation Layer (Frontend)
-   - User Interface
-   - Admin Dashboard
-   - REST API Integration
+### 1. Presentation Layer (Frontend)
 
-2. Application Layer (Backend)
-   - Authentication
-   - Business Logic
-   - REST APIs
+- User Interface
+- Admin Dashboard
+- REST API Integration
 
-3. Data Layer (Database)
-   - MongoDB Collections
-   - Data Storage and Retrieval
+### 2. Application Layer (Backend)
 
-## Database Collections
+- Authentication
+- Business Logic
+- REST APIs
+
+### 3. Data Layer (Database)
+
+- MongoDB Collections
+- Data Storage and Retrieval
+
+---
+
+## 📂 Database Collections
 
 ### Admin
+
 ```json
 {
   "username": "string",
@@ -67,6 +82,7 @@ The application follows a Three-Tier Architecture:
 ```
 
 ### Place
+
 ```json
 {
   "place_name": "string"
@@ -74,6 +90,7 @@ The application follows a Three-Tier Architecture:
 ```
 
 ### Bus
+
 ```json
 {
   "route": "string",
@@ -84,6 +101,7 @@ The application follows a Three-Tier Architecture:
 ```
 
 ### Query
+
 ```json
 {
   "name": "string",
@@ -92,29 +110,33 @@ The application follows a Three-Tier Architecture:
 }
 ```
 
-## API Endpoints
+---
+
+## 🔌 API Endpoints
 
 ### Authentication
 
 | Method | Endpoint | Description |
 |----------|----------|----------|
-| POST | /api/admin/login | Admin Login |
+| POST | `/api/admin/login` | Admin Login |
 
 ### Places
 
 | Method | Endpoint | Description |
 |----------|----------|----------|
-| GET | /api/place | Get All Places |
-| POST | /api/place/add | Add Place |
+| GET | `/api/place` | Get All Places |
+| POST | `/api/place/add` | Add Place |
 
 ### Buses
 
 | Method | Endpoint | Description |
 |----------|----------|----------|
-| GET | /api/bus | Get All Buses |
-| POST | /api/bus/add | Add Bus |
+| GET | `/api/bus` | Get All Buses |
+| POST | `/api/bus/add` | Add Bus |
 
-## Installation
+---
+
+## ⚙️ Installation
 
 ### Clone Repository
 
@@ -130,14 +152,14 @@ cd backend
 npm install
 ```
 
-Create `.env`
+Create a `.env` file:
 
 ```env
 MONGODB_URI=your_mongodb_connection_string
 PORT=4000
 ```
 
-Run Backend
+Run the backend server:
 
 ```bash
 npm run dev
@@ -151,42 +173,62 @@ npm install
 npm run dev
 ```
 
-## Screenshots
+---
+
+## 📸 Screenshots
 
 ### Home Page
-Add screenshot here
+
+![Home Page](./screenshots/home.png)
 
 ### Timetable Page
-Add screenshot here
+
+![Timetable Page](./screenshots/timetable.png)
 
 ### Contact Page
-Add screenshot here
+
+![Contact Page](./screenshots/contact.png)
 
 ### Admin Dashboard
-Add screenshot here
 
-## Future Enhancements
+![Admin Dashboard](./screenshots/admin.png)
+
+---
+
+## 🚀 Future Enhancements
 
 - Online Ticket Booking
 - Real-Time Bus Tracking
 - Seat Availability Information
-- User Authentication
+- User Authentication for Passengers
 - Mobile Application Support
+- Live Bus Status Updates
 
-## Project Outcomes
+---
 
+## 🎯 Project Outcomes
+
+- Developed a full-stack MERN application
 - Implemented RESTful APIs using Express.js
-- Integrated MongoDB database using Mongoose
+- Integrated MongoDB using Mongoose
 - Developed secure admin authentication
 - Implemented CRUD operations for buses and places
 - Built responsive frontend interfaces
+- Improved accessibility of transportation information
 
-## Author
+---
+
+## 👨‍💻 Author
 
 **Prathapa V**
+
 - Ramaiah Institute of Technology
 - Computer Science & Engineering
 
-## License
+GitHub: https://github.com/PrathapCodes
 
-MIT License
+---
+
+## 📜 License
+
+This project is licensed under the MIT License.
