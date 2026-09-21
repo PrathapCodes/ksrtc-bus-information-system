@@ -1,6 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
+const Query = require('../models/Query');
+
+// Get unread queries count - MUST be before /:id routes
+router.get('/unread', async (req, res) => {
+  try {
+    const unread_count = await Query.countDocuments({ is_read: false });
+    res.json({ unread_count });
+  } catch (err) {
+    console.error('Unread queries GET error:', err.message);
+    res.status(500).json({ error: err.message || 'Failed to fetch unread count' });
+  }
+});
 
 // Submit a new query
 router.post('/', async (req, res) => {
@@ -11,15 +22,17 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Email and message are required' });
     }
 
-    const [result] = await pool.query(
-      `INSERT INTO queries (user_email, user_name, query_subject, query_message, is_read) 
-       VALUES (?, ?, ?, ?, FALSE)`,
-      [user_email, user_name || null, query_subject || null, query_message]
-    );
+    const query = new Query({
+      user_email,
+      user_name: user_name || null,
+      query_subject: query_subject || null,
+      query_message,
+      is_read: false
+    });
 
-    const [rows] = await pool.query('SELECT * FROM queries WHERE id = ?', [result.insertId]);
+    const savedQuery = await query.save();
     console.log('Query submitted:', user_email);
-    res.json(rows[0]);
+    res.json(savedQuery);
   } catch (err) {
     console.error('Query POST error:', err.message);
     res.status(500).json({ error: err.message || 'Failed to submit query' });
@@ -29,26 +42,12 @@ router.post('/', async (req, res) => {
 // Get all queries (admin only)
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      'SELECT * FROM queries ORDER BY is_read ASC, created_at DESC'
-    );
-    res.json(rows);
+    const queries = await Query.find()
+      .sort({ is_read: 1, createdAt: -1 });
+    res.json(queries);
   } catch (err) {
     console.error('Queries GET error:', err.message);
     res.status(500).json({ error: err.message || 'Failed to fetch queries' });
-  }
-});
-
-// Get unread queries count
-router.get('/unread', async (req, res) => {
-  try {
-    const [rows] = await pool.query(
-      'SELECT COUNT(*) as unread_count FROM queries WHERE is_read = FALSE'
-    );
-    res.json({ unread_count: rows[0].unread_count });
-  } catch (err) {
-    console.error('Unread queries GET error:', err.message);
-    res.status(500).json({ error: err.message || 'Failed to fetch unread count' });
   }
 });
 
@@ -56,8 +55,9 @@ router.get('/unread', async (req, res) => {
 router.put('/:id/read', async (req, res) => {
   try {
     const { id } = req.params;
-    await pool.query('UPDATE queries SET is_read = TRUE WHERE id = ?', [id]);
-    res.json({ success: true });
+    const result = await Query.findByIdAndUpdate(id, { is_read: true }, { new: true });
+    if (!result) return res.status(404).json({ error: 'Query not found' });
+    res.json({ success: true, query: result });
   } catch (err) {
     console.error('Query READ error:', err.message);
     res.status(500).json({ error: err.message || 'Failed to mark as read' });
@@ -68,7 +68,8 @@ router.put('/:id/read', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    await pool.query('DELETE FROM queries WHERE id = ?', [id]);
+    const result = await Query.findByIdAndDelete(id);
+    if (!result) return res.status(404).json({ error: 'Query not found' });
     res.json({ success: true });
   } catch (err) {
     console.error('Query DELETE error:', err.message);

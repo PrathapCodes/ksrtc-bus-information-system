@@ -1,33 +1,85 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
+const Bus = require('../models/Bus');
+const Place = require('../models/Place');
+
+// Timetable for place id - MUST be before /:id routes to avoid conflicts
+router.get('/timetable/:placeId', async (req, res) => {
+  try {
+    let placeId = req.params.placeId;
+    let place;
+    
+    // Try to find by ObjectId first, then by name
+    try {
+      place = await Place.findById(placeId);
+    } catch (err) {
+      // If not a valid ObjectId, try by name
+      place = await Place.findOne({ name: placeId });
+    }
+    
+    if (!place) return res.status(404).json({ error: 'Place not found' });
+
+    const buses = await Bus.find({
+      $or: [
+        { from_place_id: place._id },
+        { to_place_id: place._id }
+      ]
+    })
+    .populate('from_place_id', 'name')
+    .populate('to_place_id', 'name')
+    .sort({ departure_time: 1 });
+    
+    const transformedBuses = buses.map(bus => ({
+      busid: bus._id,
+      class_of_service: bus.class_of_service,
+      via_places: bus.via_places,
+      departure_time: bus.departure_time,
+      from_name: bus.from_place_id.name,
+      to_name: bus.to_place_id.name,
+    }));
+    
+    res.json(transformedBuses);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // Get all buses (optionally filter by from/to)
 router.get('/', async (req, res) => {
   try {
     const { from, to } = req.query;
-    let sql = `
-      SELECT b.busid, b.class_of_service, b.via_places, b.departure_time,
-             pfrom.id as from_id, pfrom.name as from_name,
-             pto.id as to_id, pto.name as to_name
-      FROM buses b
-      JOIN places pfrom ON b.from_place_id = pfrom.id
-      JOIN places pto ON b.to_place_id = pto.id
-    `;
-    const params = [];
-    const clauses = [];
-    if (from) {
-      clauses.push('pfrom.name = ?');
-      params.push(from);
+    let filter = {};
+    
+    if (from || to) {
+      if (from) {
+        const fromPlace = await Place.findOne({ name: from });
+        if (fromPlace) filter.from_place_id = fromPlace._id;
+      }
+      if (to) {
+        const toPlace = await Place.findOne({ name: to });
+        if (toPlace) filter.to_place_id = toPlace._id;
+      }
     }
-    if (to) {
-      clauses.push('pto.name = ?');
-      params.push(to);
-    }
-    if (clauses.length) sql += ' WHERE ' + clauses.join(' AND ');
-    sql += ' ORDER BY b.departure_time';
-    const [rows] = await pool.query(sql, params);
-    res.json(rows);
+    
+    const buses = await Bus.find(filter)
+      .populate('from_place_id', 'name')
+      .populate('to_place_id', 'name')
+      .sort({ departure_time: 1 });
+    
+    // Transform response to match original format
+    const transformedBuses = buses.map(bus => ({
+      busid: bus._id,
+      class_of_service: bus.class_of_service,
+      via_places: bus.via_places,
+      departure_time: bus.departure_time,
+      from_id: bus.from_place_id._id,
+      from_name: bus.from_place_id.name,
+      to_id: bus.to_place_id._id,
+      to_name: bus.to_place_id.name,
+    }));
+    
+    res.json(transformedBuses);
   } catch (err) {
     console.error('Buses GET error:', err.message);
     res.status(500).json({ error: err.message || 'Failed to fetch buses' });
@@ -39,19 +91,30 @@ router.post('/', async (req, res) => {
   try {
     const { from_place_id, to_place_id, class_of_service, via_places, departure_time } = req.body;
     if (!from_place_id || !to_place_id) return res.status(400).json({ error: 'from and to required' });
-    const [result] = await pool.query(
-      `INSERT INTO buses (from_place_id, to_place_id, class_of_service, via_places, departure_time)
-       VALUES (?, ?, ?, ?, ?)`,
-      [from_place_id, to_place_id, class_of_service || '', via_places || '', departure_time || null]
-    );
-    const [rows] = await pool.query(
-      `SELECT b.*, pfrom.name as from_name, pto.name as to_name
-       FROM buses b
-       JOIN places pfrom ON b.from_place_id = pfrom.id
-       JOIN places pto ON b.to_place_id = pto.id
-       WHERE b.busid = ?`, [result.insertId]
-    );
-    res.json(rows[0]);
+    
+    const bus = new Bus({
+      from_place_id,
+      to_place_id,
+      class_of_service: class_of_service || '',
+      via_places: via_places || '',
+      departure_time: departure_time || null,
+    });
+    
+    const savedBus = await bus.save();
+    const populatedBus = await Bus.findById(savedBus._id)
+      .populate('from_place_id', 'name')
+      .populate('to_place_id', 'name');
+    
+    res.json({
+      busid: populatedBus._id,
+      class_of_service: populatedBus.class_of_service,
+      via_places: populatedBus.via_places,
+      departure_time: populatedBus.departure_time,
+      from_id: populatedBus.from_place_id._id,
+      from_name: populatedBus.from_place_id.name,
+      to_id: populatedBus.to_place_id._id,
+      to_name: populatedBus.to_place_id.name,
+    });
   } catch (err) {
     console.error('Buses POST error:', err.message);
     res.status(500).json({ error: err.message || 'Failed to add bus' });
@@ -62,36 +125,11 @@ router.post('/', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    await pool.query('DELETE FROM buses WHERE busid = ?', [id]);
+    await Bus.findByIdAndDelete(id);
     res.json({ success: true });
   } catch (err) {
     console.error('Buses DELETE error:', err.message);
     res.status(500).json({ error: err.message || 'Failed to delete bus' });
-  }
-});
-
-// Timetable for place id (show buses that go from/to or via the place)
-router.get('/timetable/:placeId', async (req, res) => {
-  try {
-    const placeId = req.params.placeId;
-    // buses where from_place_id = placeId OR to_place_id = placeId OR via_places LIKE placeName
-    const [[placeRow]] = await pool.query('SELECT * FROM places WHERE id = ?', [placeId]);
-    if (!placeRow) return res.status(404).json({ error: 'Place not found' });
-
-    const name = placeRow.name;
-    const [rows] = await pool.query(`
-      SELECT b.busid, b.class_of_service, b.via_places, b.departure_time,
-             pfrom.name as from_name, pto.name as to_name
-      FROM buses b
-      JOIN places pfrom ON b.from_place_id = pfrom.id
-      JOIN places pto ON b.to_place_id = pto.id
-      WHERE b.from_place_id = ? 
-      ORDER BY b.departure_time
-    `, [placeId, placeId, '%' + name + '%']);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
   }
 });
 

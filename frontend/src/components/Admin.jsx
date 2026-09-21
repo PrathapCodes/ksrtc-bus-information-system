@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api';
+import { formatId, IdWithTooltip } from '../utils.jsx';
 
 export default function Admin(){
   const [token, setToken] = useState(null);
@@ -114,8 +115,8 @@ export default function Admin(){
     }
     try {
       const payload = {
-        from_place_id: Number(formBus.from_place_id),
-        to_place_id: Number(formBus.to_place_id),
+        from_place_id: formBus.from_place_id,
+        to_place_id: formBus.to_place_id,
         class_of_service: formBus.class_of_service,
         via_places: formBus.via_places,
         departure_time: formBus.departure_time
@@ -300,12 +301,12 @@ export default function Admin(){
                 </thead>
                 <tbody>
                   {places.map(p => (
-                    <tr key={p.id}>
-                      <td><strong>{p.id}</strong></td>
+                    <tr key={p._id}>
+                      <td><IdWithTooltip id={p._id} /></td>
                       <td>{p.name}</td>
                       <td>
                         <button 
-                          onClick={()=>removePlace(p.id)}
+                          onClick={()=>removePlace(p._id)}
                           style={{background: '#dc3545', padding: '6px 12px', fontSize: '0.9rem'}}
                         >
                           <i className="bi bi-trash"></i> Delete
@@ -338,7 +339,7 @@ export default function Admin(){
                     onChange={e=>setFormBus({...formBus, from_place_id:e.target.value})}
                   >
                     <option value="">Select From</option>
-                    {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    {places.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -349,7 +350,7 @@ export default function Admin(){
                     onChange={e=>setFormBus({...formBus, to_place_id:e.target.value})}
                   >
                     <option value="">Select To</option>
-                    {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    {places.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
                   </select>
                 </div>
                 <div>
@@ -403,7 +404,7 @@ export default function Admin(){
                 <tbody>
                   {buses.map(b => (
                     <tr key={b.busid}>
-                      <td><strong>{b.busid}</strong></td>
+                      <td><IdWithTooltip id={b.busid} /></td>
                       <td>{b.from_name}</td>
                       <td>{b.to_name}</td>
                       <td><span className="bus-class">{b.class_of_service}</span></td>
@@ -471,7 +472,7 @@ export default function Admin(){
                   </thead>
                   <tbody>
                     {queries.map(q => (
-                      <tr key={q.id} style={{background: q.is_read ? '#fff' : '#fff3cd'}}>
+                      <tr key={q._id} style={{background: q.is_read ? '#fff' : '#fff3cd'}}>
                         <td>
                           {q.is_read ? (
                             <span style={{color: '#28a745', fontWeight: 600}}>
@@ -490,19 +491,19 @@ export default function Admin(){
                           {q.query_message}
                         </td>
                         <td style={{fontSize: '0.85rem', color: '#636e72'}}>
-                          {new Date(q.created_at).toLocaleDateString()}
+                          {new Date(q.createdAt).toLocaleDateString()}
                         </td>
                         <td>
                           {!q.is_read && (
                             <button 
-                              onClick={() => markQueryAsRead(q.id)}
+                              onClick={() => markQueryAsRead(q._id)}
                               style={{background: '#28a745', padding: '6px 10px', fontSize: '0.85rem', marginRight: '5px'}}
                             >
                               <i className="bi bi-check2"></i> Mark Read
                             </button>
                           )}
                           <button 
-                            onClick={() => deleteQuery(q.id)}
+                            onClick={() => deleteQuery(q._id)}
                             style={{background: '#dc3545', padding: '6px 10px', fontSize: '0.85rem'}}
                           >
                             <i className="bi bi-trash"></i> Delete

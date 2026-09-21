@@ -1,31 +1,20 @@
-const mysql = require('mysql2/promise');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASS || '',
-  database: process.env.DB_NAME || 'businfo',
-  waitForConnections: true,
-  connectionLimit: 10,
-  enableKeepAlive: true,
-  keepAliveInitialDelayMs: 0,
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/businfo';
+
+// Connect to MongoDB
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => {
+  console.log('✅ MongoDB connected successfully!');
+})
+.catch(err => {
+  console.error('❌ MongoDB connection failed:', err.message);
+  console.error('Please make sure MongoDB is running and connection string is correct.');
+  console.error('Connection URI:', MONGODB_URI);
 });
 
-// Test connection on startup
-pool.getConnection().then(conn => {
-  console.log('✅ Database connected successfully!');
-  conn.release();
-}).catch(err => {
-  console.error('❌ Database connection failed:', err.message);
-  console.error('Please make sure MySQL is running and credentials are correct.');
-  console.error('Connection details:', {
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 3306,
-    user: process.env.DB_USER || 'root',
-    database: process.env.DB_NAME || 'businfo'
-  });
-});
-
-module.exports = pool;
+module.exports = mongoose;

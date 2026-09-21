@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
+// Initialize MongoDB connection
+require('./db');
+
 const authRouter = require('./routes/auth');
 const placesRouter = require('./routes/places');
 const busesRouter = require('./routes/buses');

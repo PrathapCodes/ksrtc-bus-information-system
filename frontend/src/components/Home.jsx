@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api';
+import { IdWithTooltip } from '../utils.jsx';
 
 export default function Home(){
   const [places, setPlaces] = useState([]);
@@ -53,7 +54,7 @@ export default function Home(){
                   onChange={e => setFrom(e.target.value)}
                 >
                   <option value="">-- Select Location --</option>
-                  {places.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                  {places.map(p => <option key={p._id} value={p.name}>{p.name}</option>)}
                 </select>
               </div>
             </div>
@@ -70,7 +71,7 @@ export default function Home(){
                   onChange={e => setTo(e.target.value)}
                 >
                   <option value="">-- Select Location --</option>
-                  {places.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                  {places.map(p => <option key={p._id} value={p.name}>{p.name}</option>)}
                 </select>
               </div>
             </div>
@@ -103,7 +104,7 @@ export default function Home(){
             {results.map(r => (
               <div key={r.busid} className="bus-card">
                 <div className="bus-card-header">
-                  <span className="bus-id">{r.busid}</span>
+                  <IdWithTooltip id={r.busid} />
                   <span className="bus-class">{r.class_of_service}</span>
                 </div>
 
@@ -131,7 +132,7 @@ export default function Home(){
                     <i className="bi bi-tag" style={{color: '#d63031'}}></i>
                     <div>
                       <div className="info-label">Bus ID</div>
-                      <div className="info-value">{r.busid}</div>
+                      <div className="info-value"><IdWithTooltip id={r.busid} /></div>
                     </div>
                   </div>
                 </div>

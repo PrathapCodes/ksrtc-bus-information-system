@@ -1,12 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
+const Place = require('../models/Place');
 
 // Get all places
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM places ORDER BY name');
-    res.json(rows);
+    const places = await Place.find().sort({ name: 1 });
+    // Transform to use 'id' instead of '_id' for consistency
+    const transformedPlaces = places.map(p => ({
+      id: p._id,
+      _id: p._id,
+      name: p.name,
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt
+    }));
+    res.json(transformedPlaces);
   } catch (err) {
     console.error('Places GET error:', err.message);
     res.status(500).json({ error: err.message || 'Failed to fetch places' });
@@ -19,10 +27,11 @@ router.post('/', async (req, res) => {
     const { name } = req.body;
     console.log('Adding place:', name);
     if (!name) return res.status(400).json({ error: 'Place name required' });
-    const [result] = await pool.query('INSERT INTO places (name) VALUES (?)', [name]);
-    console.log('Place inserted with ID:', result.insertId);
-    const [rows] = await pool.query('SELECT * FROM places WHERE id = ?', [result.insertId]);
-    res.json(rows[0]);
+    
+    const place = new Place({ name });
+    const savedPlace = await place.save();
+    console.log('Place inserted with ID:', savedPlace._id);
+    res.json(savedPlace);
   } catch (err) {
     console.error('Places POST error:', err.message);
     res.status(500).json({ error: err.message || 'Failed to add place' });
@@ -33,7 +42,7 @@ router.post('/', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    await pool.query('DELETE FROM places WHERE id = ?', [id]);
+    await Place.findByIdAndDelete(id);
     res.json({ success: true });
   } catch (err) {
     console.error('Places DELETE error:', err.message);

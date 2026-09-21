@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api';
+import { IdWithTooltip } from '../utils.jsx';
 
 export default function TimeTable(){
   const [places, setPlaces] = useState([]);
@@ -37,7 +38,7 @@ export default function TimeTable(){
             onChange={e => setSelected(e.target.value)}
           >
             <option value="">-- Select a place --</option>
-            {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            {places.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
           </select>
         </div>
         <button onClick={load} style={{marginTop: '10px'}} disabled={loading}>
@@ -73,7 +74,7 @@ export default function TimeTable(){
             <tbody>
               {timetable.map(b => (
                 <tr key={b.busid}>
-                  <td><strong>{b.busid}</strong></td>
+                  <td><IdWithTooltip id={b.busid} /></td>
                   <td>{b.from_name}</td>
                   <td>{b.to_name}</td>
                   <td><span className="bus-class">{b.class_of_service}</span></td>
